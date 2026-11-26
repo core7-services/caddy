@@ -1,0 +1,22 @@
+{
+	servers :443 {
+		listener_wrappers {
+			layer4 {
+				@passthrough tls sni passthrough.example.com
+				route @passthrough {
+					proxy tls-backend:443 {
+						proxy_protocol v2
+					}
+				}
+			}
+			tls
+		}
+	}
+}
+
+site.example.com {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+	reverse_proxy site:80
+}

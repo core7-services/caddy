@@ -1,0 +1,51 @@
+name: Caddy image
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: caddy-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and check image
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build image
+        run: docker build --platform linux/amd64 --tag caddy:ci .
+
+      - name: Check modules and validate example
+        env:
+          CLOUDFLARE_API_TOKEN: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        run: |
+          modules=$(docker run --rm caddy:ci caddy list-modules)
+          grep -Fx 'layer4' <<< "$modules"
+          grep -Fx 'caddy.listeners.layer4' <<< "$modules"
+          grep -Fx 'dns.providers.cloudflare' <<< "$modules"
+          grep -Fx 'http.handlers.forward_proxy' <<< "$modules"
+          docker run --rm -i --env CLOUDFLARE_API_TOKEN caddy:ci \
+            caddy validate --config - --adapter caddyfile < examples/Caddyfile
+
+      - name: Publish image to GHCR
+        if: github.event_name == 'push'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker tag caddy:ci "$image:sha-$GITHUB_SHA"
+          docker tag caddy:ci "$image:latest"
+          docker push "$image:sha-$GITHUB_SHA"
+          docker push "$image:latest"
