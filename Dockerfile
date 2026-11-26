@@ -6,7 +6,8 @@ ARG CADDY_VERSION
 RUN xcaddy build "v${CADDY_VERSION}" \
     --output /usr/bin/caddy \
     --with github.com/mholt/caddy-l4@v0.1.3 \
-    --with github.com/caddy-dns/cloudflare@v0.2.4
+    --with github.com/caddy-dns/cloudflare@v0.2.4 \
+    --with github.com/caddyserver/forwardproxy=github.com/klzgrad/forwardproxy@v0.0.0-20261022172731-e747854e7874
 
 FROM caddy:${CADDY_VERSION}-alpine
 

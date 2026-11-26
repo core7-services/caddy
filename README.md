@@ -1,16 +1,18 @@
 # Caddy for Core7
 
-An Alpine-based Caddy image with [caddy-l4](https://github.com/mholt/caddy-l4) for TCP routing and the [Cloudflare DNS module](https://github.com/caddy-dns/cloudflare) for ACME DNS-01. The [Dockerfile](Dockerfile) pins Caddy and both modules.
+An Alpine-based Caddy image with [caddy-l4](https://github.com/mholt/caddy-l4) for TCP routing, the [Cloudflare DNS module](https://github.com/caddy-dns/cloudflare) for ACME DNS-01, and the [NaïveProxy fork of forwardproxy](https://github.com/klzgrad/naiveproxy#server-setup). The [Dockerfile](Dockerfile) pins Caddy and all three modules.
 
 ## Image
 
-Pull requests to `main` build the Linux AMD64 image, check that both modules are registered, and validate the example. Pushes to `main` run the same checks and publish `ghcr.io/core7-services/caddy:latest` and `ghcr.io/core7-services/caddy:sha-<commit>`. Use the commit tag or image digest to pin a deployment.
+Pull requests to `main` build the Linux AMD64 image, check that all three modules are registered, and validate the example. Pushes to `main` run the same checks and publish `ghcr.io/core7-services/caddy:latest` and `ghcr.io/core7-services/caddy:sha-<commit>`. Use the commit tag or image digest to pin a deployment.
 
 Build locally with `docker build -t core7-caddy .`.
 
 ## Configuration
 
 The [example Caddyfile](examples/Caddyfile) shows two paths on the same `443/tcp` listener. Caddy sends one SNI to a TLS backend that accepts PROXY protocol v2 and terminates HTTPS for the site itself. For HTTP/3, publish `443/udp` alongside `443/tcp`. Set `CLOUDFLARE_API_TOKEN` in the container for DNS-01.
+
+Enable NaïveProxy for a deployment by configuring `forward_proxy` with authentication in its Caddyfile. See the [NaïveProxy server setup](https://github.com/klzgrad/naiveproxy#server-setup).
 
 Caddy reads the Caddyfile on startup and adapts it to its native JSON configuration. Keep the Caddyfile and any `import` fragments in a mounted directory such as `/etc/caddy`. After updating the files, validate and reload them from inside the container. These commands assume the Compose service is named `caddy`.
 

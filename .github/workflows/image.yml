@@ -34,6 +34,7 @@ jobs:
           grep -Fx 'layer4' <<< "$modules"
           grep -Fx 'caddy.listeners.layer4' <<< "$modules"
           grep -Fx 'dns.providers.cloudflare' <<< "$modules"
+          grep -Fx 'http.handlers.forward_proxy' <<< "$modules"
           docker run --rm -i --env CLOUDFLARE_API_TOKEN caddy:ci \
             caddy validate --config - --adapter caddyfile < examples/Caddyfile
 
